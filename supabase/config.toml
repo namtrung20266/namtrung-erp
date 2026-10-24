@@ -1,0 +1,4 @@
+project_id = "namtrung-erp"
+
+[functions.api]
+verify_jwt = false

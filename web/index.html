@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nam Trung · ERP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/erp.css">
+<link rel="stylesheet" href="css/crm.css">
+</head>
+<body>
+<div class="bar" id="bar"></div>
+<div id="root"><p style="font-family:Arial,sans-serif;padding:40px;color:#6B6A8E">Đang tải...</p></div>
+<input type="file" id="cam" accept="image/*" capture="user" hidden>
+<div id="crm" style="display:none">
+<div id="login" class="hidden"><div class="lg">
+  <h1>Nam Trung Sale CRM</h1><p>Đăng nhập bằng mã nhân viên</p>
+  <div class="f"><label>Mã nhân viên</label><input id="lgMa" autocomplete="username" placeholder="VD: NV001"></div>
+  <div class="f"><label>Mật khẩu</label><input id="lgMk" type="password" autocomplete="current-password"></div>
+  <div id="lgErr"></div><button class="btn p" id="lgBtn" onclick="doLogin()">Đăng nhập</button>
+</div></div>
+<div id="app" class="hidden">
+  <aside class="side"><div class="brand"><div class="logo">NT</div><div class="bt"><b>Nam Trung</b><span>Sale CRM</span></div><button class="tg" onclick="toggleSide()" title="Thu gọn / mở menu"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button></div><nav id="nav"></nav><div id="me"></div></aside>
+  <main><header><button class="btn ham" onclick="toggleSide()" title="Menu"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg></button><h1 id="title"></h1><div id="hdAct" style="display:flex;gap:8px"></div><span class="sp"></span>
+    <button class="btn hb" onclick="openCheck()" title="Kiểm tra trước khi tiếp cận khách">Kiểm tra SĐT / MST</button><button class="btn hb" onclick="quickCare()" title="Phím tắt F2">Ghi chăm sóc nhanh</button><span class="m" id="hdDate"></span></header>
+    <section id="view"></section></main>
+</div>
+<div id="mask" class="hidden" onclick="closeDrawer()"></div><div id="smask" onclick="toggleSide()"></div><div id="drawer"></div>
+<div class="fab"><button onclick="openCheck()" title="Kiểm tra SĐT/MST"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></button><button class="p" onclick="quickCare()" title="Ghi chăm sóc"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button></div><div id="modal" class="hidden"></div><div id="toast"></div><div id="loading"></div>
+</div>
+<script src="js/config.js"></script>
+<script src="js/bridge.js"></script>
+<script src="js/crm.js"></script>
+<script src="js/erp.js"></script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "name": "namtrung-erp",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "python3 tools/build_server.py && python3 tools/build_web.py",
+    "test": "TZ=UTC node tests/e2e.test.mjs",
+    "dev": "TZ=UTC node tests/devserver.mjs"
+  },
+  "devDependencies": { "@electric-sql/pglite": "^0.2.0" }
+}
