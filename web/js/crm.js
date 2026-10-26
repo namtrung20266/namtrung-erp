@@ -153,11 +153,29 @@ function pgKH(){$('#hdAct').innerHTML='<button class="btn a" onclick="openKH()">
   $('#fq').oninput=()=>{clearTimeout(khTimer);khTimer=setTimeout(renderKHTable,120);};
   $$('#fgd,#fmd,#flo,#fnv').forEach(e=>e.onchange=renderKHTable);
   $('#fcb').onclick=e=>{const b=e.target.closest('button');if(!b)return;$$('#fcb button').forEach(x=>x.classList.remove('on'));b.classList.add('on');renderKHTable();};
+/* --- BẮT ĐẦU THÊM MỚI TAB GIAI ĐOẠN --- */
+  const gdList = L('GIAI_DOAN') || Object.keys(GDC);
+  const stageTabs = `<div class="stage-tabs" id="stgTabs">
+    <button data-gd="" class="on" style="--sc: #4F46E5"><span class="t">Tất cả</span><span class="c" id="stc_all">0</span></button>
+    ${gdList.map(g => `<button data-gd="${esc(g)}" style="--sc: ${GDC[g]||'#64748B'}"><span class="t">${esc(g)}</span><span class="c" id="stc_${fold(g).replace(/[^a-z0-9]/g,'')}">0</span></button>`).join('')}
+  </div>`;
+  $('.bar').insertAdjacentHTML('afterend', stageTabs);
+  $('#fgd').style.display = 'none'; // Ẩn ô chọn giai đoạn cũ đi cho gọn
+  $('#stgTabs').onclick=e=>{const b=e.target.closest('button');if(!b)return;$$('#stgTabs button').forEach(x=>x.classList.remove('on'));b.classList.add('on');$('#fgd').value = b.dataset.gd; renderKHTable();};
+  /* --- KẾT THÚC THÊM MỚI --- */
   renderKHTable();if(Date.now()-S.khTs>60000)reloadKH();}
 function renderKHTable(){if(S.page!=='kh'||!$('#khTbl')||!S.kh)return;const all=S.kh,q=fold($('#fq').value.trim());
   const gd=$('#fgd').value,md=$('#fmd').value,lo=$('#flo').value,nv=$('#fnv')?$('#fnv').value:'',cb=($('#fcb .on')||{dataset:{}}).dataset.v||'';
   const n=f=>all.filter(f).length,set=(id,v)=>{const e=$('#fc_'+id);if(e)e.textContent=v;};
   const qh=n(k=>k.canhBao==='Quá hạn');set('tong',all.length);set('can',qh+n(k=>k.canhBao==='Hôm nay'));set('quaHan',qh);set('boQuen',n(k=>k.canhBao==='Bỏ quên'));set('khoNgu',n(k=>k.giaiDoan==='Kho khách ngủ'));
+                     /* --- BẮT ĐẦU THÊM MỚI ĐẾM SỐ KHÁCH --- */
+  const stcAll = $('#stc_all'); if(stcAll) stcAll.textContent = all.length;
+  (L('GIAI_DOAN') || Object.keys(GDC)).forEach(g => {
+    const id = 'stc_' + fold(g).replace(/[^a-z0-9]/g,'');
+    const el = $('#' + id);
+    if(el) el.textContent = n(k => k.giaiDoan === g);
+  });
+  /* --- KẾT THÚC THÊM MỚI --- */    
   let r=all.filter(k=>(!q||k._f.includes(q))&&(!gd||k.giaiDoan===gd)&&(!md||k.mucDo===md)&&(!lo||k.loaiKH===lo)&&(!nv||k.maNV===nv)&&
     (!cb||(cb==='CanCham'?(k.canhBao==='Quá hạn'||k.canhBao==='Hôm nay'):k.canhBao===cb||(cb==='Kho khách ngủ'&&k.giaiDoan===cb))));
   const pr={'Quá hạn':0,'Hôm nay':1};r=r.slice().sort((a,b)=>((pr[a.canhBao]??2)-(pr[b.canhBao]??2))||String(a.ngayHenCham||'9').localeCompare(String(b.ngayHenCham||'9')));
