@@ -302,8 +302,20 @@ __route('hr.leave.submit', (ctx, f) => {
     backup_employee_id: backup ? backup.id : null, handover_note: String(f.banGiao || '').trim(), is_late_notice: v.baoGap, status: direct ? 'approved' : 'pending',
     approver1_id: direct ? ctx.userId : null, approved1_at: direct ? U.now() : null, decision_note: direct ? (target.id === ctx.emp.id ? 'Tự duyệt (Admin)' : 'Ghi nhận bởi ' + ctx.emp.display_name) : null
   }, ctx.userId);
-  if (direct) Leave.writeDays(r, target, v.t); else Leave.notify(r, target, 'Đơn mới cần duyệt');
+if (direct) Leave.writeDays(r, target, v.t); else Leave.notify(r, target, 'Đơn mới cần duyệt');
   Audit.log(ctx.userId, direct ? 'leave.create_approved' : 'leave.create', 'leave_requests', r.id, { no: r.request_no, emp: target.employee_code });
+  
+  // --- BẮT ĐẦU CODE TELEGRAM ---
+  if (!direct) { // Nếu đơn không phải do admin tự duyệt mà là nhân viên xin
+    var msg = "🚨 <b>CÓ ĐƠN XIN NGHỈ MỚI CẦN DUYỆT</b>\n";
+    msg += "Nhân sự: <b>" + target.display_name + "</b>\n";
+    msg += "Phân loại: " + v.t.name + "\n";
+    msg += "Thời gian: " + (v.soNgay ? v.soNgay + " ngày" : v.soGio + " giờ") + " (từ " + v.start + ")\n";
+    msg += "Lý do: " + String(f.lyDo).trim() + "\n";
+    msg += "👉 Vào web để duyệt đơn.";
+    sendTelegramAlert(msg);
+  }
+  // --- KẾT THÚC CODE TELEGRAM ---
   return { ok: true, id: r.request_no, status: LEAVE_ST[r.status] };
 }, { write: true });
 __route('hr.leave.mine', ctx => Repo.where('leave_requests', r => r.employee_id === ctx.emp.id).sort((a, b) => String(b.created_at).localeCompare(String(a.created_at))).slice(0, 60).map(r => Leave.view(r, true)));
@@ -360,3 +372,28 @@ __route('hr.leave.decide', (ctx, p) => {
   if (owner && owner.email_work) Hr.mail(owner.email_work, kq + ' – ' + t.name + ' ' + U.vn(r.start_date), '<p>Đơn <b>' + r.request_no + '</b>: <b>' + kq + '</b>.</p>' + (note ? '<p>Ghi chú: ' + U.esc(note) + '</p>' : '') + Hr.btn('Xem đơn của tôi', '?p=mine'));
   return { ok: true, tt: LEAVE_ST[ch.status] };
 }, { write: true });
+//Bắn TELEGRAM//
+function sendTelegramAlert(message) {
+  var token = "8945177192:AAFSEYodQ3SB6Dykcf2UNtiSpWRw5XjQiKQ";
+  var chatId = "-5431641121"; // VD: -100123456789
+  var url = "https://api.telegram.org/bot8945177192:AAFSEYodQ3SB6Dykcf2UNtiSpWRw5XjQiKQ/sendMessage";
+  
+  var payload = {
+    "chat_id": chatId,
+    "text": message,
+    "parse_mode": "HTML"
+  };
+  
+  var options = {
+    "method": "post",
+    "contentType": "application/json",
+    "payload": JSON.stringify(payload),
+    "muteHttpExceptions": true
+  };
+  
+  try {
+    UrlFetchApp.fetch(url, options);
+  } catch (e) {
+    // Bỏ qua lỗi nếu bot không gửi được để không làm chết app
+  }
+}
