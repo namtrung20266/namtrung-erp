@@ -273,61 +273,63 @@ async function saveCare(){if(!S.care)return;const c=S.care,o={maKH:c.maKH,kenh:c
 
 /* ======================= BÁO GIÁ ======================= */
 let bgTimer=null;
-function pgBG(){$('#hdAct').innerHTML='<button class="btn a" onclick="newBG()">Tạo báo giá</button>';
+function pgBG(){
+  $('#hdAct').innerHTML='<button class="btn a" onclick="newBG()">Tạo báo giá</button>';
   V().innerHTML=`<div class="bar"><input id="bq" placeholder="Mã BG, khách, mã đơn, mặt hàng…" style="width:260px"><span class="m">Tạo từ</span><input type="date" id="bfr" value="${addDays(td(),-60)}"><span class="m">đến</span><input type="date" id="bto" value="${td()}">
-   <select id="btt">${opts(L('TRANG_THAI_BG'),'','Mọi trạng thái')}</select>${isMgr()?`<select id="bnv">${optsNV('','Mọi nhân viên')}</select>`:''}<span class="sp"></span><span class="m" id="bcount"></span></div>
+   <select id="btt">${opts(L('TRANG_THAI_BG'),'','Mọi trạng thái')}</select>${isMgr()?`<select id="bnv">${optsNV('','Mọi nhân viên')}</select>`:''}<span class="sp"></span><span class="m" id="bcount" style="display:none"></span></div>
    <section class="pane fill"><div class="scroll" id="bgTbl"></div></section>`;
-  $('#bq').oninput=()=>{clearTimeout(bgTimer);bgTimer=setTimeout(loadBG,350);};$$('#bfr,#bto,#btt,#bnv').forEach(e=>e.onchange=loadBG);
   
-  /* --- BẮT ĐẦU THÊM MỚI TAB TRẠNG THÁI BÁO GIÁ --- */
-  const bgList = L('TRANG_THAI_BG') || Object.keys(BTC);
+  $('#bq').oninput=()=>{clearTimeout(bgTimer);bgTimer=setTimeout(loadBG,350);};
+  $$('#bfr,#bto,#btt,#bnv').forEach(e=>e.onchange=loadBG);
+  
+  let bgList = L('TRANG_THAI_BG');
+  if (!bgList || bgList.length === 0) bgList = Object.keys(BTC);
+  
   const bgTabs = `<div class="stage-tabs" id="bgTabs">
     <button data-tt="" class="on" style="--sc: #4F46E5"><span class="t">Tất cả</span><span class="c" id="btc_all">0</span></button>
     ${bgList.map(t => `<button data-tt="${esc(t)}" style="--sc: ${BTC[t]||'#64748B'}"><span class="t">${esc(t)}</span><span class="c" id="btc_${fold(t).replace(/[^a-z0-9]/g,'')}">0</span></button>`).join('')}
   </div>`;
   
-  // Chèn HTML tab vào dưới thanh tìm kiếm (bar)
   $('#view .bar').insertAdjacentHTML('afterend', bgTabs);
-  // Ẩn ô chọn trạng thái (select dropdown) cũ cho gọn
   $('#btt').style.display = 'none'; 
   
-  // Xử lý khi click vào tab
   $('#bgTabs').onclick = e => {
     const b = e.target.closest('button');
     if(!b) return;
     $$('#bgTabs button').forEach(x => x.classList.remove('on'));
     b.classList.add('on');
-    $('#btt').value = b.dataset.tt; // Gán giá trị tab vào ô select ẩn
-    loadBG(); // Tải lại danh sách
+    $('#btt').value = b.dataset.tt; 
+    loadBG(); 
   };
-  /* --- KẾT THÚC THÊM MỚI --- */
 
   loadBG();
 }
-async function loadBG(){if(S.page!=='bg'||!$('#bgTbl'))return;const d=await call('apiListBG',{q:$('#bq').value,tuNgay:$('#bfr').value,denNgay:$('#bto').value,trangThai:$('#btt').value,maNV:$('#bnv')?$('#bnv').value:''});if(!d||!$('#bgTbl'))return;
-  $('#bcount').textContent=Object.keys(d.cnt).map(k=>k+': '+d.cnt[k]).join(', ');setBadge('bg',d.cnt['Chờ duyệt giá']&&S.c.duyetGia?d.cnt['Chờ duyệt giá']:0);
+
+async function loadBG(){
+  if(S.page!=='bg'||!$('#bgTbl'))return;
+  const d=await call('apiListBG',{q:$('#bq').value,tuNgay:$('#bfr').value,denNgay:$('#bto').value,trangThai:$('#btt').value,maNV:$('#bnv')?$('#bnv').value:''});
+  if(!d||!$('#bgTbl'))return;
   
-  /* --- BẮT ĐẦU THÊM MỚI ĐẾM SỐ BÁO GIÁ --- */
+  setBadge('bg',d.cnt['Chờ duyệt giá']&&S.c.duyetGia?d.cnt['Chờ duyệt giá']:0);
+  
+  let total = 0;
+  for (let k in d.cnt) total += (d.cnt[k] || 0);
   const btcAll = $('#btc_all');
-  if (btcAll) {
-    let total = 0;
-    for (let k in d.cnt) total += (d.cnt[k] || 0);
-    btcAll.textContent = total;
-  }
+  if (btcAll) btcAll.textContent = total;
   
-  (L('TRANG_THAI_BG') || Object.keys(BTC)).forEach(t => {
+  let bgList = L('TRANG_THAI_BG');
+  if (!bgList || bgList.length === 0) bgList = Object.keys(BTC);
+  
+  bgList.forEach(t => {
     const id = 'btc_' + fold(t).replace(/[^a-z0-9]/g,'');
     const el = $('#' + id);
-    if(el) el.textContent = d.cnt[t] || 0;
+    if (el) el.textContent = d.cnt[t] || 0;
   });
-  /* --- KẾT THÚC THÊM MỚI --- */
 
   $('#bgTbl').innerHTML=d.rows.length?`<table class="tbl"><tr><th>Mã BG</th><th>Tạo</th><th>Gửi</th><th>Khách hàng</th><th>Mã đơn</th><th>Hàng</th><th class="num">Tổng sau VAT</th><th class="num">LN ước tính</th><th>Trạng thái</th>${isMgr()?'<th>Sale</th>':''}<th></th></tr>
    ${d.rows.map(b=>`<tr class="ck" onclick="openBG('${b.maBG}')"><td><b>${b.maBG}</b>${b.phienBan>1?' v'+b.phienBan:''}</td><td>${dmy(b.ngayTao)}</td><td>${dmy(b.ngayGui)}</td><td>${esc(b.tenKH)}<span class="sub">${esc(b.maKH)}</span></td><td>${esc(b.maDon)}</td><td class="long">${esc(b.tomTatHang)}</td><td class="num">${fmt(b.tongSauVAT)}</td><td class="num">${fmt(b.lnUocTinh)}</td><td>${bgBd(b.trangThai)}${b.canhBaoGia&&/CẤM|DUYỆT/.test(b.canhBaoGia)?`<span class="sub r">${b.duyetBoi?'Đã duyệt: '+esc(b.duyetBoi):'Phá khung giá'}</span>`:''}</td>${isMgr()?`<td>${esc(b.tenNV)}</td>`:''}
-   <td class="act"><button class="btn s" onclick="event.stopPropagation();printBG('${b.maBG}')">In</button> <button class="btn s" onclick="event.stopPropagation();cloneBG('${b.maBG}')">Nhân bản</button></td></tr>`).join('')}</table>`:'<div class="empty">Chưa có báo giá trong khoảng thời gian này.</div>';}
-  $('#bgTbl').innerHTML=d.rows.length?`<table class="tbl"><tr><th>Mã BG</th><th>Tạo</th><th>Gửi</th><th>Khách hàng</th><th>Mã đơn</th><th>Hàng</th><th class="num">Tổng sau VAT</th><th class="num">LN ước tính</th><th>Trạng thái</th>${isMgr()?'<th>Sale</th>':''}<th></th></tr>
-   ${d.rows.map(b=>`<tr class="ck" onclick="openBG('${b.maBG}')"><td><b>${b.maBG}</b>${b.phienBan>1?' v'+b.phienBan:''}</td><td>${dmy(b.ngayTao)}</td><td>${dmy(b.ngayGui)}</td><td>${esc(b.tenKH)}<span class="sub">${esc(b.maKH)}</span></td><td>${esc(b.maDon)}</td><td class="long">${esc(b.tomTatHang)}</td><td class="num">${fmt(b.tongSauVAT)}</td><td class="num">${fmt(b.lnUocTinh)}</td><td>${bgBd(b.trangThai)}${b.canhBaoGia&&/CẤM|DUYỆT/.test(b.canhBaoGia)?`<span class="sub r">${b.duyetBoi?'Đã duyệt: '+esc(b.duyetBoi):'Phá khung giá'}</span>`:''}</td>${isMgr()?`<td>${esc(b.tenNV)}</td>`:''}
-   <td class="act"><button class="btn s" onclick="event.stopPropagation();printBG('${b.maBG}')">In</button> <button class="btn s" onclick="event.stopPropagation();cloneBG('${b.maBG}')">Nhân bản</button></td></tr>`).join('')}</table>`:'<div class="empty">Chưa có báo giá trong khoảng thời gian này.</div>';}
+   <td class="act"><button class="btn s" onclick="event.stopPropagation();printBG('${b.maBG}')">In</button> <button class="btn s" onclick="event.stopPropagation();cloneBG('${b.maBG}')">Nhân bản</button></td></tr>`).join('')}</table>`:'<div class="empty">Chưa có báo giá trong khoảng thời gian này.</div>';
+}
 
 const BG_NUM_H=['tyGia','shipNoiDiaTe','soKg','donGiaKg','soKhoi','donGiaKhoi','phiDVPct','phiDVTien','phiUTPct','phiKeKhai','phiHopQuy','phiKTCL','phiKhac','lamTron','tyLeXuat','tndnPct'];
 const BG_NUM_L=['soLuong','donGiaTe','thueNKPct','vatPct','pctCuoc','giaXuatNhap'];
