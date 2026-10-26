@@ -159,7 +159,7 @@ function pgKH(){$('#hdAct').innerHTML='<button class="btn a" onclick="openKH()">
     <button data-gd="" class="on" style="--sc: #4F46E5"><span class="t">Tất cả</span><span class="c" id="stc_all">0</span></button>
     ${gdList.map(g => `<button data-gd="${esc(g)}" style="--sc: ${GDC[g]||'#64748B'}"><span class="t">${esc(g)}</span><span class="c" id="stc_${fold(g).replace(/[^a-z0-9]/g,'')}">0</span></button>`).join('')}
   </div>`;
-  $('.bar').insertAdjacentHTML('afterend', stageTabs);
+  $('#view .bar').insertAdjacentHTML('afterend', stageTabs);
   $('#fgd').style.display = 'none'; // Ẩn ô chọn giai đoạn cũ đi cho gọn
   $('#stgTabs').onclick=e=>{const b=e.target.closest('button');if(!b)return;$$('#stgTabs button').forEach(x=>x.classList.remove('on'));b.classList.add('on');$('#fgd').value = b.dataset.gd; renderKHTable();};
   /* --- KẾT THÚC THÊM MỚI --- */
