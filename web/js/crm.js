@@ -306,6 +306,25 @@ function pgBG(){$('#hdAct').innerHTML='<button class="btn a" onclick="newBG()">T
 }
 async function loadBG(){if(S.page!=='bg'||!$('#bgTbl'))return;const d=await call('apiListBG',{q:$('#bq').value,tuNgay:$('#bfr').value,denNgay:$('#bto').value,trangThai:$('#btt').value,maNV:$('#bnv')?$('#bnv').value:''});if(!d||!$('#bgTbl'))return;
   $('#bcount').textContent=Object.keys(d.cnt).map(k=>k+': '+d.cnt[k]).join(', ');setBadge('bg',d.cnt['Chờ duyệt giá']&&S.c.duyetGia?d.cnt['Chờ duyệt giá']:0);
+  
+  /* --- BẮT ĐẦU THÊM MỚI ĐẾM SỐ BÁO GIÁ --- */
+  const btcAll = $('#btc_all');
+  if (btcAll) {
+    let total = 0;
+    for (let k in d.cnt) total += (d.cnt[k] || 0);
+    btcAll.textContent = total;
+  }
+  
+  (L('TRANG_THAI_BG') || Object.keys(BTC)).forEach(t => {
+    const id = 'btc_' + fold(t).replace(/[^a-z0-9]/g,'');
+    const el = $('#' + id);
+    if(el) el.textContent = d.cnt[t] || 0;
+  });
+  /* --- KẾT THÚC THÊM MỚI --- */
+
+  $('#bgTbl').innerHTML=d.rows.length?`<table class="tbl"><tr><th>Mã BG</th><th>Tạo</th><th>Gửi</th><th>Khách hàng</th><th>Mã đơn</th><th>Hàng</th><th class="num">Tổng sau VAT</th><th class="num">LN ước tính</th><th>Trạng thái</th>${isMgr()?'<th>Sale</th>':''}<th></th></tr>
+   ${d.rows.map(b=>`<tr class="ck" onclick="openBG('${b.maBG}')"><td><b>${b.maBG}</b>${b.phienBan>1?' v'+b.phienBan:''}</td><td>${dmy(b.ngayTao)}</td><td>${dmy(b.ngayGui)}</td><td>${esc(b.tenKH)}<span class="sub">${esc(b.maKH)}</span></td><td>${esc(b.maDon)}</td><td class="long">${esc(b.tomTatHang)}</td><td class="num">${fmt(b.tongSauVAT)}</td><td class="num">${fmt(b.lnUocTinh)}</td><td>${bgBd(b.trangThai)}${b.canhBaoGia&&/CẤM|DUYỆT/.test(b.canhBaoGia)?`<span class="sub r">${b.duyetBoi?'Đã duyệt: '+esc(b.duyetBoi):'Phá khung giá'}</span>`:''}</td>${isMgr()?`<td>${esc(b.tenNV)}</td>`:''}
+   <td class="act"><button class="btn s" onclick="event.stopPropagation();printBG('${b.maBG}')">In</button> <button class="btn s" onclick="event.stopPropagation();cloneBG('${b.maBG}')">Nhân bản</button></td></tr>`).join('')}</table>`:'<div class="empty">Chưa có báo giá trong khoảng thời gian này.</div>';}
   $('#bgTbl').innerHTML=d.rows.length?`<table class="tbl"><tr><th>Mã BG</th><th>Tạo</th><th>Gửi</th><th>Khách hàng</th><th>Mã đơn</th><th>Hàng</th><th class="num">Tổng sau VAT</th><th class="num">LN ước tính</th><th>Trạng thái</th>${isMgr()?'<th>Sale</th>':''}<th></th></tr>
    ${d.rows.map(b=>`<tr class="ck" onclick="openBG('${b.maBG}')"><td><b>${b.maBG}</b>${b.phienBan>1?' v'+b.phienBan:''}</td><td>${dmy(b.ngayTao)}</td><td>${dmy(b.ngayGui)}</td><td>${esc(b.tenKH)}<span class="sub">${esc(b.maKH)}</span></td><td>${esc(b.maDon)}</td><td class="long">${esc(b.tomTatHang)}</td><td class="num">${fmt(b.tongSauVAT)}</td><td class="num">${fmt(b.lnUocTinh)}</td><td>${bgBd(b.trangThai)}${b.canhBaoGia&&/CẤM|DUYỆT/.test(b.canhBaoGia)?`<span class="sub r">${b.duyetBoi?'Đã duyệt: '+esc(b.duyetBoi):'Phá khung giá'}</span>`:''}</td>${isMgr()?`<td>${esc(b.tenNV)}</td>`:''}
    <td class="act"><button class="btn s" onclick="event.stopPropagation();printBG('${b.maBG}')">In</button> <button class="btn s" onclick="event.stopPropagation();cloneBG('${b.maBG}')">Nhân bản</button></td></tr>`).join('')}</table>`:'<div class="empty">Chưa có báo giá trong khoảng thời gian này.</div>';}
