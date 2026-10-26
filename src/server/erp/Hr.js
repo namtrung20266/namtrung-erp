@@ -373,27 +373,24 @@ __route('hr.leave.decide', (ctx, p) => {
   return { ok: true, tt: LEAVE_ST[ch.status] };
 }, { write: true });
 //Bắn TELEGRAM//
+
 function sendTelegramAlert(message) {
-  var token = "8945177192:AAFSEYodQ3SB6Dykcf2UNtiSpWRw5XjQiKQ";
-  var chatId = "-5431641121"; // VD: -100123456789
-  var url = "https://api.telegram.org/bot8945177192:AAFSEYodQ3SB6Dykcf2UNtiSpWRw5XjQiKQ/sendMessage";
+  var token = "8945177192:AAFSEYodQ3SB6Dykcf2UNtiSpWRw5XjQiKQ"; // Anh điền lại token đúng của bot nhé
+  var chatId = "-5431641121"; 
+  var url = "https://api.telegram.org/bot" + token + "/sendMessage";
   
-  var payload = {
-    "chat_id": chatId,
-    "text": message,
-    "parse_mode": "HTML"
-  };
-  
-  var options = {
-    "method": "post",
-    "contentType": "application/json",
-    "payload": JSON.stringify(payload),
-    "muteHttpExceptions": true
-  };
-  
-  try {
-    UrlFetchApp.fetch(url, options);
-  } catch (e) {
-    // Bỏ qua lỗi nếu bot không gửi được để không làm chết app
-  }
+  // Dùng hàm fetch chuẩn của JavaScript/Node.js/Deno
+  fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      chat_id: chatId,
+      text: message,
+      parse_mode: "HTML"
+    })
+  }).catch(function(e) {
+    console.error("Lỗi gửi Telegram: ", e); // Ghi log nếu có lỗi
+  });
 }
