@@ -277,7 +277,33 @@ function pgBG(){$('#hdAct').innerHTML='<button class="btn a" onclick="newBG()">T
   V().innerHTML=`<div class="bar"><input id="bq" placeholder="Mã BG, khách, mã đơn, mặt hàng…" style="width:260px"><span class="m">Tạo từ</span><input type="date" id="bfr" value="${addDays(td(),-60)}"><span class="m">đến</span><input type="date" id="bto" value="${td()}">
    <select id="btt">${opts(L('TRANG_THAI_BG'),'','Mọi trạng thái')}</select>${isMgr()?`<select id="bnv">${optsNV('','Mọi nhân viên')}</select>`:''}<span class="sp"></span><span class="m" id="bcount"></span></div>
    <section class="pane fill"><div class="scroll" id="bgTbl"></div></section>`;
-  $('#bq').oninput=()=>{clearTimeout(bgTimer);bgTimer=setTimeout(loadBG,350);};$$('#bfr,#bto,#btt,#bnv').forEach(e=>e.onchange=loadBG);loadBG();}
+  $('#bq').oninput=()=>{clearTimeout(bgTimer);bgTimer=setTimeout(loadBG,350);};$$('#bfr,#bto,#btt,#bnv').forEach(e=>e.onchange=loadBG);
+  
+  /* --- BẮT ĐẦU THÊM MỚI TAB TRẠNG THÁI BÁO GIÁ --- */
+  const bgList = L('TRANG_THAI_BG') || Object.keys(BTC);
+  const bgTabs = `<div class="stage-tabs" id="bgTabs">
+    <button data-tt="" class="on" style="--sc: #4F46E5"><span class="t">Tất cả</span><span class="c" id="btc_all">0</span></button>
+    ${bgList.map(t => `<button data-tt="${esc(t)}" style="--sc: ${BTC[t]||'#64748B'}"><span class="t">${esc(t)}</span><span class="c" id="btc_${fold(t).replace(/[^a-z0-9]/g,'')}">0</span></button>`).join('')}
+  </div>`;
+  
+  // Chèn HTML tab vào dưới thanh tìm kiếm (bar)
+  $('#view .bar').insertAdjacentHTML('afterend', bgTabs);
+  // Ẩn ô chọn trạng thái (select dropdown) cũ cho gọn
+  $('#btt').style.display = 'none'; 
+  
+  // Xử lý khi click vào tab
+  $('#bgTabs').onclick = e => {
+    const b = e.target.closest('button');
+    if(!b) return;
+    $$('#bgTabs button').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    $('#btt').value = b.dataset.tt; // Gán giá trị tab vào ô select ẩn
+    loadBG(); // Tải lại danh sách
+  };
+  /* --- KẾT THÚC THÊM MỚI --- */
+
+  loadBG();
+}
 async function loadBG(){if(S.page!=='bg'||!$('#bgTbl'))return;const d=await call('apiListBG',{q:$('#bq').value,tuNgay:$('#bfr').value,denNgay:$('#bto').value,trangThai:$('#btt').value,maNV:$('#bnv')?$('#bnv').value:''});if(!d||!$('#bgTbl'))return;
   $('#bcount').textContent=Object.keys(d.cnt).map(k=>k+': '+d.cnt[k]).join(', ');setBadge('bg',d.cnt['Chờ duyệt giá']&&S.c.duyetGia?d.cnt['Chờ duyệt giá']:0);
   $('#bgTbl').innerHTML=d.rows.length?`<table class="tbl"><tr><th>Mã BG</th><th>Tạo</th><th>Gửi</th><th>Khách hàng</th><th>Mã đơn</th><th>Hàng</th><th class="num">Tổng sau VAT</th><th class="num">LN ước tính</th><th>Trạng thái</th>${isMgr()?'<th>Sale</th>':''}<th></th></tr>
