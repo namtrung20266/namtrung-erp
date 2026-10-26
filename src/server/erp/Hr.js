@@ -325,18 +325,6 @@ __route('hr.leave.submit', (ctx, f) => {
 if (direct) Leave.writeDays(r, target, v.t); else Leave.notify(r, target, 'Đơn mới cần duyệt');
   Audit.log(ctx.userId, direct ? 'leave.create_approved' : 'leave.create', 'leave_requests', r.id, { no: r.request_no, emp: target.employee_code });
     Tele.leave(r, target, v.t, direct);
-  
-  // --- BẮT ĐẦU CODE TELEGRAM ---
-  if (!direct) { // Nếu đơn không phải do admin tự duyệt mà là nhân viên xin
-    var msg = "🚨 <b>CÓ ĐƠN XIN NGHỈ MỚI CẦN DUYỆT</b>\n";
-    msg += "Nhân sự: <b>" + target.display_name + "</b>\n";
-    msg += "Phân loại: " + v.t.name + "\n";
-    msg += "Thời gian: " + (v.soNgay ? v.soNgay + " ngày" : v.soGio + " giờ") + " (từ " + v.start + ")\n";
-    msg += "Lý do: " + String(f.lyDo).trim() + "\n";
-    msg += "👉 Vào web để duyệt đơn.";
-    sendTelegramAlert(msg);
-  }
-  // --- KẾT THÚC CODE TELEGRAM ---
   return { ok: true, id: r.request_no, status: LEAVE_ST[r.status] };
 }, { write: true });
 __route('hr.leave.mine', ctx => Repo.where('leave_requests', r => r.employee_id === ctx.emp.id).sort((a, b) => String(b.created_at).localeCompare(String(a.created_at))).slice(0, 60).map(r => Leave.view(r, true)));
