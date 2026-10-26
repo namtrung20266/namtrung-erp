@@ -84,6 +84,26 @@ const PayrollCalc = {
 };
 
 /* ============================== DỮ LIỆU DÙNG CHUNG ============================== */
+/* ===== THÔNG BÁO TELEGRAM: điền hr.telegram_token và hr.telegram_chat_id trong Quản trị → Sửa cấu hình → settings ===== */
+const Tele = {
+  send(text) {
+    const token = String(Settings.get('hr.telegram_token', '') || '').trim(), chat = String(Settings.get('hr.telegram_chat_id', '') || '').trim();
+    if (!token || !chat) return;
+    UrlFetchApp.fetch('https://api.telegram.org/bot' + token + '/sendMessage', { method: 'post', contentType: 'application/json', muteHttpExceptions: true,
+      payload: JSON.stringify({ chat_id: chat, text: text, parse_mode: 'HTML', disable_web_page_preview: true }) });
+  },
+  leave(r, emp, t, direct) {
+    const when = t.unit === 'hour' ? U.vn(r.start_date) + ' ' + r.start_time + '–' + r.end_time + ' (' + r.hours + ' giờ)'
+      : U.vn(r.start_date) + ' ' + vnHalf(r.start_half).toLowerCase() + ' → ' + U.vn(r.end_date) + ' ' + vnHalf(r.end_half).toLowerCase() + ' (' + r.days + ' ngày)';
+    let url = ''; try { url = ScriptApp.getService().getUrl() || ''; } catch (e) { }
+    Tele.send('📝 <b>Đơn nghỉ mới ' + U.esc(r.request_no) + '</b>\n' +
+      '👤 ' + U.esc(emp.full_name) + ' – ' + U.esc(Hr.dept(emp.department_id)) + '\n' +
+      '📌 ' + U.esc(t.name) + '\n🗓 ' + U.esc(when) + '\n✍️ Lý do: ' + U.esc(r.reason) +
+      (r.backup_employee_id ? '\n🤝 Người hỗ trợ: ' + U.esc(Hr.name(r.backup_employee_id)) : '') +
+      (r.is_late_notice ? '\n⚠️ Báo gấp' : '') +
+      '\n' + (direct ? '✅ Đã ghi nhận' : '⏳ Chờ duyệt' + (url ? ': ' + url + '?p=approve' : '')));
+  }
+};
 const Hr = {
   types() { return Ref.ref().leaveTypes; },
   type(id) { return Hr.types().find(t => t.id === id) || null; },
@@ -304,6 +324,7 @@ __route('hr.leave.submit', (ctx, f) => {
   }, ctx.userId);
 if (direct) Leave.writeDays(r, target, v.t); else Leave.notify(r, target, 'Đơn mới cần duyệt');
   Audit.log(ctx.userId, direct ? 'leave.create_approved' : 'leave.create', 'leave_requests', r.id, { no: r.request_no, emp: target.employee_code });
+    Tele.leave(r, target, v.t, direct);
   
   // --- BẮT ĐẦU CODE TELEGRAM ---
   if (!direct) { // Nếu đơn không phải do admin tự duyệt mà là nhân viên xin
@@ -372,25 +393,4 @@ __route('hr.leave.decide', (ctx, p) => {
   if (owner && owner.email_work) Hr.mail(owner.email_work, kq + ' – ' + t.name + ' ' + U.vn(r.start_date), '<p>Đơn <b>' + r.request_no + '</b>: <b>' + kq + '</b>.</p>' + (note ? '<p>Ghi chú: ' + U.esc(note) + '</p>' : '') + Hr.btn('Xem đơn của tôi', '?p=mine'));
   return { ok: true, tt: LEAVE_ST[ch.status] };
 }, { write: true });
-//Bắn TELEGRAM//
 
-function sendTelegramAlert(message) {
-  var token = "8945177192:AAFSEYodQ3SB6Dykcf2UNtiSpWRw5XjQiKQ"; // Anh điền lại token đúng của bot nhé
-  var chatId = "-5431641121"; 
-  var url = "https://api.telegram.org/bot" + token + "/sendMessage";
-  
-  // Dùng hàm fetch chuẩn của JavaScript/Node.js/Deno
-  fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      chat_id: chatId,
-      text: message,
-      parse_mode: "HTML"
-    })
-  }).catch(function(e) {
-    console.error("Lỗi gửi Telegram: ", e); // Ghi log nếu có lỗi
-  });
-}
