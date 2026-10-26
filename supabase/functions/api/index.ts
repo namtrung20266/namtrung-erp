@@ -49,7 +49,7 @@ async function run(fn: string, args: unknown[], appUrl: string) {
       await q('begin', []);
       try { await flushChanges(q, ch, env.audit); await q('commit', []); } catch (e) { await q('rollback', []); throw e; }
     }
-    for (const f of ch.fetches) if (/larksuite|feishu/.test(f.url)) fetch(f.url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: f.o.payload }).catch(() => {});
+        await Promise.all(ch.fetches.filter(f => /larksuite|feishu|api\.telegram\.org/.test(f.url)).map(f => fetch(f.url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: f.o.payload }).catch(() => {})));
     return { error, result };
   } finally {
     if (write) await q('select pg_advisory_unlock(424242)', []).catch(() => {});
