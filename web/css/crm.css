@@ -407,3 +407,23 @@
 #crm #app>main{height:auto!important;min-height:calc(100vh - 48px)}
 #crm #mask{z-index:79}#crm #drawer{z-index:80}#crm #modal{z-index:90}#crm #imgv{z-index:95}#crm #toast{z-index:99}
 @media (max-width:900px){#crm .fab{bottom:104px!important}#crm #toast{bottom:110px}#crm #drawer{width:100vw}}
+#crm #nav {
+    flex: 1; /* Ép menu chỉ chiếm phần không gian còn lại ở giữa */
+    min-height: 0; /* Bắt buộc để thẻ flex con không bị phình kích thước theo nội dung */
+    overflow-y: auto; /* Bật thanh cuộn dọc */
+}
+
+/* Làm gọn thanh cuộn cho menu tinh tế hơn (ẩn đi khi không cuộn) */
+#crm #nav::-webkit-scrollbar {
+    width: 4px;
+}
+#crm #nav::-webkit-scrollbar-track {
+    background: transparent;
+}
+#crm #nav::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+}
+#crm #nav::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
