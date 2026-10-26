@@ -18,10 +18,10 @@ button:not(#crm *),input:not(#crm *),select:not(#crm *),textarea:not(#crm *){fon
 :focus-visible:not(#crm *){outline:3px solid var(--violet);outline-offset:2px}
 @media (prefers-reduced-motion: reduce){*:not(#crm *){animation:none!important;transition:none!important}}
 .app:not(#crm *){display:grid;grid-template-columns:232px 1fr;min-height:100vh}
-.rail:not(#crm *){position:sticky;top:0;height:100vh;padding:28px 18px;display:flex;flex-direction:column;gap:6px;border-right:1px solid var(--soft)}
+.rail:not(#crm *){position:sticky;top:0;height:100vh;padding:16px 12px;display:flex;flex-direction:column;gap:4px;border-right:1px solid var(--soft);overflow-y:auto;scrollbar-width:thin;}
 .brand:not(#crm *){font-weight:800;font-size:26px;letter-spacing:-.04em;margin:0 10px 22px;line-height:1}
 .brand small:not(#crm *){display:block;font-size:13px;font-weight:500;letter-spacing:0;color:var(--muted);margin-top:6px}
-.nav:not(#crm *){display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:var(--r-md);border:0;background:none;cursor:pointer;text-align:left;font-weight:600;color:var(--muted)}
+.nav:not(#crm *){display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:var(--r-md);border:0;background:none;cursor:pointer;text-align:left;font-weight:600;color:var(--muted)}
 .nav:hover:not(#crm *){background:var(--soft2);color:var(--ink)}
 .nav[aria-current="page"]:not(#crm *){background:var(--ink);color:var(--bg)}
 .nav .ic:not(#crm *){font-size:18px;width:22px;text-align:center}
@@ -240,3 +240,6 @@ td.hl:not(#crm *){font-weight:800;background:var(--violet-t)}
 #crmSlot:not([hidden]){display:block;padding:0}
 .rail .grp{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--mute,#6B6A8E);margin:14px 12px 4px}
 .app.crm-on main#erpView{display:none}
+/* Custom scrollbar cho thanh menu */
+.rail:not(#crm *)::-webkit-scrollbar { width: 4px; }
+.rail:not(#crm *)::-webkit-scrollbar-thumb { background: var(--soft); border-radius: 4px; }
