@@ -243,3 +243,7 @@ td.hl:not(#crm *){font-weight:800;background:var(--violet-t)}
 /* Custom scrollbar cho thanh menu */
 .rail:not(#crm *)::-webkit-scrollbar { width: 4px; }
 .rail:not(#crm *)::-webkit-scrollbar-thumb { background: var(--soft); border-radius: 4px; }
+/* --- Ẩn thanh menu cũ của hệ thống, chỉ giữ lại khung CRM mới --- */
+.app:not(#crm *):not(.app.crm-on) { /* giữ nguyên các trang khác */ }
+.app.crm-on .rail { display: none !important; }
+.app.crm-on { grid-template-columns: 1fr !important; }
