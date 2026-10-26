@@ -793,6 +793,7 @@ async function viewAdmin(){
     });
   };
   $('#aQ').oninput = draw; $('#aAdd').onclick = addModal; draw();
+  renderConfig();
   renderImport();
 }
 function passShow(r){
@@ -883,6 +884,53 @@ function renderImport(){
       };
     } catch (er) { $('#impL').innerHTML = '<p class="pv e">' + esc(er.message) + '</p>'; }
   };
+}
+
+/* ---------- SỬA CẤU HÌNH TRỰC TIẾP (như sửa Google Sheet) ---------- */
+const CFG_SHEETS = [
+  ['CRM', 'CAU_HINH', 'Bán hàng: danh mục, mặc định báo giá, tham số, thông tin công ty, tài khoản, QR'],
+  ['CRM', 'KPI_CHI_TIEU', 'Bán hàng: chỉ tiêu KPI'],
+  ['CRM', 'HUONG_DAN', 'Bán hàng: hướng dẫn'],
+  ['CORE', 'settings', 'Nhân sự: cấu hình chung (giờ làm, phép, Lark, IP...)'],
+  ['HR', 'leave_types', 'Nhân sự: loại nghỉ'],
+  ['CORE', 'holidays', 'Nhân sự: ngày lễ'],
+  ['CORE', 'departments', 'Nhân sự: phòng ban']
+];
+const CFG_HIDE = ['id', 'created_at', 'created_by', 'updated_at', 'updated_by', 'deleted_at'];
+function renderConfig(){
+  const box = document.createElement('section'); box.className = 'card'; box.style.marginTop = '20px';
+  box.innerHTML = `<h2 style="margin-top:0">Sửa cấu hình</h2>
+    <p class="muted">Sửa trực tiếp như trên Google Sheet. Mỗi cột của <b>CAU_HINH</b> là một danh sách (dòng 1 là tên danh sách). Các dòng dạng <b>tên=giá trị</b> (MAC_DINH_BG, THAM_SO, THONG_TIN_CTY) là tham số. Sửa xong bấm Lưu.</p>
+    <div class="toolbar"><select id="cfS" style="max-width:520px">${CFG_SHEETS.map((x, i) => `<option value="${i}">${esc(x[1])}: ${esc(x[2])}</option>`).join('')}</select><button class="btn sm" id="cfOpen">Mở</button></div>
+    <div id="cfBox"></div>`;
+  $('#erpView').appendChild(box);
+  $('#cfOpen').onclick = openCfg;
+}
+async function openCfg(){
+  const [book, sheet] = CFG_SHEETS[+$('#cfS').value];
+  $('#cfBox').innerHTML = '<div class="skel"></div>';
+  let rows;
+  try { rows = await Api.call('admin.sheet.get', { book, sheet }); } catch (e) { $('#cfBox').innerHTML = '<p class="pv e">' + esc(e.message) + '</p>'; return; }
+  if (!rows.length) rows = [['']];
+  const W = Math.max.apply(null, rows.map(r => r.length));
+  rows = rows.map(r => { const a = r.slice(); while (a.length < W) a.push(''); return a; });
+  const head = rows[0], hidden = book === 'CRM' ? [] : head.map((h, j) => CFG_HIDE.indexOf(h) >= 0 ? j : -1).filter(j => j >= 0);
+  const isList = book === 'CRM' && sheet === 'CAU_HINH';
+  const draw = () => {
+    $('#cfBox').innerHTML = `<div class="tbl-wrap" style="max-height:560px;overflow:auto"><table class="cfg"><thead><tr><th>#</th>${head.map((h, j) => hidden.indexOf(j) >= 0 ? '' : `<th style="text-align:left">${isList ? `<input data-r="0" data-c="${j}" value="${esc(h)}" style="font-weight:800;min-width:140px;background:#fff;color:#17153B">` : esc(h)}</th>`).join('')}<th></th></tr></thead>
+      <tbody>${rows.slice(1).map((r, i) => `<tr><td>${i + 1}</td>${r.map((v, j) => hidden.indexOf(j) >= 0 ? '' : `<td style="text-align:left"><input data-r="${i + 1}" data-c="${j}" value="${esc(v)}" style="font-weight:500;min-width:${String(v).length > 30 ? 320 : 140}px"></td>`).join('')}<td><button class="btn ghost sm" data-del="${i + 1}">Xóa dòng</button></td></tr>`).join('')}</tbody></table></div>
+      <div class="toolbar" style="margin-top:12px"><button class="btn ghost sm" id="cfAddR">+ Thêm dòng</button>${isList ? '<button class="btn ghost sm" id="cfAddC">+ Thêm danh sách (cột)</button>' : ''}<button class="btn sm" id="cfSave">Lưu ${esc(sheet)}</button></div>`;
+    document.querySelectorAll('#cfBox input[data-r]').forEach(inp => inp.oninput = () => { rows[+inp.dataset.r][+inp.dataset.c] = inp.value; });
+    document.querySelectorAll('#cfBox [data-del]').forEach(b => b.onclick = () => { rows.splice(+b.dataset.del, 1); draw(); });
+    $('#cfAddR').onclick = () => { rows.push(head.map(() => '')); draw(); };
+    if (isList) $('#cfAddC').onclick = () => { rows.forEach(r => r.push('')); draw(); };
+    $('#cfSave').onclick = async () => {
+      const out = rows.filter((r, i) => i === 0 || r.some(v => String(v).trim() !== '')).map(r => r.map(v => { const t = String(v).trim(); return t !== '' && /^-?\d+(\.\d+)?$/.test(t) && !/^0\d/.test(t) ? Number(t) : v; }));
+      if (!confirm('Lưu ' + sheet + ' (' + (out.length - 1) + ' dòng)?')) return;
+      try { await Api.call('admin.import.sheet', { book, sheet, rows: out }); toast('Đã lưu ' + sheet + '. Tải lại trang để áp dụng.'); } catch (e) { toast(e.message, true); }
+    };
+  };
+  draw();
 }
 
 /* ===================== CRM TRONG CÙNG ỨNG DỤNG ===================== */

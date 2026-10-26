@@ -535,17 +535,17 @@ async function loadBG(){if(S.page!=='bg'||!$('#bgTbl'))return;const d=await call
    ${d.rows.map(b=>`<tr class="ck" onclick="openBG('${b.maBG}')"><td><b>${b.maBG}</b>${b.phienBan>1?' v'+b.phienBan:''}</td><td>${dmy(b.ngayTao)}</td><td>${dmy(b.ngayGui)}</td><td>${esc(b.tenKH)}<span class="sub">${esc(b.maKH)}</span></td><td>${esc(b.maDon)}</td><td class="long">${esc(b.tomTatHang)}</td><td class="num">${fmt(b.tongSauVAT)}</td><td class="num">${fmt(b.lnUocTinh)}</td><td>${bgBd(b.trangThai)}${b.canhBaoGia&&/CẤM|DUYỆT/.test(b.canhBaoGia)?`<span class="sub r">${b.duyetBoi?'Đã duyệt: '+esc(b.duyetBoi):'Phá khung giá'}</span>`:''}</td>${isMgr()?`<td>${esc(b.tenNV)}</td>`:''}
    <td class="act"><button class="btn s" onclick="event.stopPropagation();printBG('${b.maBG}')">In</button> <button class="btn s" onclick="event.stopPropagation();cloneBG('${b.maBG}')">Nhân bản</button></td></tr>`).join('')}</table>`:'<div class="empty">Chưa có báo giá trong khoảng thời gian này.</div>';}
 
-const BG_NUM_H=['tyGia','shipNoiDiaTe','soKg','donGiaKg','soKhoi','donGiaKhoi','phiDVPct','phiUTPct','phiKeKhai','phiHopQuy','phiKTCL','phiKhac','lamTron','tyLeXuat','tndnPct'];
+const BG_NUM_H=['tyGia','shipNoiDiaTe','soKg','donGiaKg','soKhoi','donGiaKhoi','phiDVPct','phiDVTien','phiUTPct','phiKeKhai','phiHopQuy','phiKTCL','phiKhac','lamTron','tyLeXuat','tndnPct'];
 const BG_NUM_L=['soLuong','donGiaTe','thueNKPct','vatPct','pctCuoc','giaXuatNhap'];
 const emptyLine=()=>({tenHang:'',moTa:'',hsCode:'',dvt:'Chiếc',soLuong:'',donGiaTe:'',thueNKPct:'',vatPct:S.c.md.vatPct,pctCuoc:'',giaXuatNhap:''});
-function bgDefaults(){const m=S.c.md;return{maBG:'',maKH:'',maDon:'',tyGia:m.tyGia,hinhThucNK:'',shipNoiDiaTe:'',soKg:'',donGiaKg:m.donGiaKg,soKhoi:'',donGiaKhoi:m.donGiaKhoi,phiDVPct:m.phiDVPct,phiUTPct:m.phiUTPct,coSoUT:m.coSoUyThac,phiKeKhai:0,phiHopQuy:0,phiKTCL:0,phiKhac:0,tenPhiKhac:'',lamTron:m.lamTron,cheDoXuat:'du',tyLeXuat:100,tndnPct:m.tndnPct||20,coSoUT:m.coSoUyThac==='tienHang'?'tienHang':'giaXuat',coSoThueNK:m.coSoThueNK==='giaXuat'?'giaXuat':'toKhai',ghiChu:'',trangThai:'Nháp',phienBan:1};}
+function bgDefaults(){const m=S.c.md;return{maBG:'',maKH:'',maDon:'',tyGia:m.tyGia,hinhThucNK:'',shipNoiDiaTe:'',soKg:'',donGiaKg:m.donGiaKg,soKhoi:'',donGiaKhoi:m.donGiaKhoi,phiDVPct:m.phiDVPct,phiDVTien:'',phiUTPct:m.phiUTPct,coSoUT:m.coSoUyThac,phiKeKhai:0,phiHopQuy:0,phiKTCL:0,phiKhac:0,tenPhiKhac:'',lamTron:m.lamTron,cheDoXuat:'du',tyLeXuat:100,tndnPct:m.tndnPct||20,coSoUT:m.coSoUyThac==='tienHang'?'tienHang':'giaXuat',coSoThueNK:m.coSoThueNK==='giaXuat'?'giaXuat':'toKhai',ghiChu:'',trangThai:'Nháp',phienBan:1};}
 async function ensureGon(){if(!S.kh)await reloadKH();return S.kh||[];}
 async function newBG(maKH,seed){if(maKH&&blocked(maKH))return;await ensureGon();closeDrawer();const h=Object.assign(bgDefaults(),seed?seed.h:{});
   if(maKH){h.maKH=maKH;const k=S.khMap[maKH];if(k&&!h.hinhThucNK)h.hinhThucNK=k.hinhThucNK||'';}
   S.bg={h,lines:seed?seed.lines:[emptyLine()],dirty:false};enterEditor();}
 async function openBG(maBG){const d=await call('apiGetBG',maBG);if(!d)return;await ensureGon();closeDrawer();S.bg={h:d.bg,lines:d.lines.map(l=>({tenHang:l.tenHang,moTa:l.moTa,hsCode:l.hsCode,dvt:l.dvt,soLuong:l.soLuong,donGiaTe:l.donGiaTe,thueNKPct:l.thueNKPct,vatPct:l.vatPct,pctCuoc:l.pctCuoc,giaXuatNhap:l.giaXuatNhap})),dirty:false};enterEditor();}
 async function cloneBG(maBG){const d=await call('apiGetBG',maBG);if(!d)return;const b=d.bg,h={};
-  ['maKH','tyGia','hinhThucNK','shipNoiDiaTe','soKg','donGiaKg','soKhoi','donGiaKhoi','phiDVPct','phiUTPct','phiKeKhai','phiHopQuy','phiKTCL','phiKhac','tenPhiKhac','lamTron','cheDoXuat','tyLeXuat','coSoThueNK','coSoUT','tndnPct'].forEach(k=>h[k]=b[k]);h.tyGia=S.c.md.tyGia;h.ghiChu='Nhân bản từ '+maBG;
+  ['maKH','tyGia','hinhThucNK','shipNoiDiaTe','soKg','donGiaKg','soKhoi','donGiaKhoi','phiDVPct','phiDVTien','phiUTPct','phiKeKhai','phiHopQuy','phiKTCL','phiKhac','tenPhiKhac','lamTron','cheDoXuat','tyLeXuat','coSoThueNK','coSoUT','tndnPct'].forEach(k=>h[k]=b[k]);h.tyGia=S.c.md.tyGia;h.ghiChu='Nhân bản từ '+maBG;
   await newBG(b.maKH,{h,lines:d.lines.map(l=>({tenHang:l.tenHang,moTa:l.moTa,hsCode:l.hsCode,dvt:l.dvt,soLuong:l.soLuong,donGiaTe:l.donGiaTe,thueNKPct:l.thueNKPct,vatPct:l.vatPct,pctCuoc:l.pctCuoc,giaXuatNhap:l.giaXuatNhap}))});toast('Đã nhân bản. Kiểm tra lại tỷ giá, số lượng rồi lưu.');}
 function enterEditor(){S.page='bgEdit';$$('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.p==='bg'));$('#hdAct').innerHTML='';renderBGEditor();}
 const bgLocked=()=>['Đã chốt đơn','Khách từ chối','Đã thay thế','Hết hạn'].includes(S.bg.h.trangThai);
@@ -583,7 +583,8 @@ function calcCore(h, lines, md, N) {
   const shipNoiDiaTe = N(h.shipNoiDiaTe), shipNoiDia = Math.round(shipNoiDiaTe * ty);
   const soKg = N(h.soKg), donGiaKg = N(h.donGiaKg), soKhoi = N(h.soKhoi), donGiaKhoi = N(h.donGiaKhoi);
   const vcKg = Math.round(soKg * donGiaKg), vcKhoi = Math.round(soKhoi * donGiaKhoi), phiVC = Math.max(vcKg, vcKhoi);
-  const phiDVPct = N(h.phiDVPct), phiUTPct = N(h.phiUTPct), phiKeKhai = N(h.phiKeKhai), phiHopQuy = N(h.phiHopQuy), phiKTCL = N(h.phiKTCL), phiKhac = N(h.phiKhac);
+  const phiDVTien = Math.max(0, Math.round(N(h.phiDVTien))); // Phí dịch vụ cố định (đ): có nhập thì thay cho %
+  const phiDVPct = phiDVTien > 0 && tienHang > 0 ? phiDVTien * 100 / tienHang : N(h.phiDVPct), phiUTPct = N(h.phiUTPct), phiKeKhai = N(h.phiKeKhai), phiHopQuy = N(h.phiHopQuy), phiKTCL = N(h.phiKTCL), phiKhac = N(h.phiKhac);
   // Cước: dòng có nhập "% cước" giữ đúng %, phần còn lại chia cho các dòng khác theo tiền hàng.
   const fixed = L.filter(l => l.pctCuoc > 0), free = L.filter(l => !(l.pctCuoc > 0));
   const sumFix = fixed.reduce((a, l) => a + l.pctCuoc, 0);
@@ -630,7 +631,7 @@ function calcCore(h, lines, md, N) {
   if (cheDo === 'cao') { if (rThuc <= 1) cb.push('LƯU Ý: chế độ xuất cao cần % lớn hơn 100'); else cb.push('LƯU Ý: xuất ' + pctX + '% giá đủ, thu thêm TNDN ' + tndnPct + '% phần chênh'); }
   if (sumFix > 100) cb.push('LƯU Ý: tổng % cước tự nhập vượt 100%, đã quy về 100%');
   return { all, ty, k, thueTrenGX, coSoThue, r: rThuc, cheDo, coSo, tienHangTe, tienHang, shipNoiDiaTe, shipNoiDia, soKg, donGiaKg, soKhoi, donGiaKhoi, vcKg, vcKhoi, phiVC,
-    phiDVPct, phiDV, phiUTPct, phiUT, phiKeKhai, phiHopQuy, phiKTCL, phiKhac, thueNK, thueNKDu, toKhai, lam, lamTronChenh, tong, tongDu, chenh, tndnPct,
+    phiDVPct, phiDVTien, phiDV, phiUTPct, phiUT, phiKeKhai, phiHopQuy, phiKTCL, phiKhac, thueNK, thueNKDu, toKhai, lam, lamTronChenh, tong, tongDu, chenh, tndnPct,
     thuThemTNDN, thueNKTang, tongChiPhiThuc, tongThu: tongChiPhiThuc + vat, vat, tongSau: tong + vat, ln, cb, err };
 }
 const calcBG=(h,lines)=>calcCore(h,lines,S.c.md,pnum);
@@ -646,7 +647,7 @@ function renderBGEditor(){const h=S.bg.h,lk=bgLocked(),dis=lk?'disabled':'';$('#
      ${I('tyGia','Tỷ giá RMB/VND *')}
      <div class="f s3"><label>Hình thức nhập khẩu</label><select data-h="hinhThucNK" ${dis}>${opts(L('HINH_THUC_NK'),h.hinhThucNK,'— Chọn —')}</select></div>
      ${I('shipNoiDiaTe','Ship nội địa TQ cả đơn (¥)','','0')}${I('soKg','Cân nặng cả lô (kg)','','ước tính')}${I('donGiaKg','Đơn giá / kg')}${I('soKhoi','Số khối cả lô (m³)','','ước tính')}${I('donGiaKhoi','Đơn giá / m³')}
-     ${I('phiDVPct','Phí dịch vụ (%)')}${I('phiUTPct','Phí ủy thác (%)')}
+     ${I('phiDVPct','Phí dịch vụ (%)')}${I('phiDVTien','Phí dịch vụ cố định (đ)','','để trống = tính theo %')}${I('phiUTPct','Phí ủy thác (%)')}
      <div class="f"><label>Chế độ xuất hóa đơn</label><select data-h="cheDoXuat" id="bCd" ${dis}><option value="du" ${cd==='du'?'selected':''}>Đủ giá trị</option><option value="thap" ${cd==='thap'?'selected':''}>Xuất thấp hơn</option><option value="cao" ${cd==='cao'?'selected':''}>Xuất cao hơn</option></select></div>
      ${I('phiKeKhai','Phí kê khai < 100kg')}${I('phiHopQuy','Phí hợp quy')}${I('lamTron','Làm tròn giá đến')}
      <div class="f"><label>% so với giá đủ (áp cho dòng chưa nhập giá)</label><input data-h="tyLeXuat" id="bTl" class="num" value="${esc(cd==='du'?100:(h.tyLeXuat||''))}" ${dis||(cd==='du'?'disabled':'')} placeholder="${cd==='thap'?'≥ '+(S.c.md.tyLeXuatMin||70):'VD: 115'}"></div>
@@ -680,7 +681,7 @@ function recalc(){const c=calcBG(S.bg.h,S.bg.lines);S.bg.calc=c;
   const cam=c.cb.filter(x=>x.startsWith('CẤM')),duyet=c.cb.filter(x=>x.startsWith('DUYỆT')),lu=c.cb.filter(x=>x.startsWith('LƯU Ý'));
   const kTxt=String(c.k).replace('.',',');
   $('#bSum').innerHTML=R('Tiền hàng',fmt(c.tienHang),'¥'+fmt2(c.tienHangTe)+' × '+fmt(c.ty))+R('Ship nội địa TQ',fmt(c.shipNoiDia))+
-   '<div class="sec">Mục phí chính</div>'+R('Vận chuyển TQ – Hà Nội',fmt(c.phiVC),c.phiVC?(c.vcKg>=c.vcKhoi?'theo cân: ':'theo khối: ')+'kg '+fmt(c.vcKg)+' / khối '+fmt(c.vcKhoi):'')+R('Phí dịch vụ '+fmt2(c.phiDVPct)+'%',fmt(c.phiDV))+
+   '<div class="sec">Mục phí chính</div>'+R('Vận chuyển TQ – Hà Nội',fmt(c.phiVC),c.phiVC?(c.vcKg>=c.vcKhoi?'theo cân: ':'theo khối: ')+'kg '+fmt(c.vcKg)+' / khối '+fmt(c.vcKhoi):'')+R(c.phiDVTien>0?'Phí dịch vụ (cố định, ≈'+fmt2(c.phiDVPct)+'%)':'Phí dịch vụ '+fmt2(c.phiDVPct)+'%',fmt(c.phiDV))+
    R('Phí ủy thác '+fmt2(c.phiUTPct)+'%',fmt(c.phiUT),c.coSo==='tienHang'?'tính trên tiền hàng (xuất thấp)':'tính trên giá xuất')+
    '<div class="sec">Mục phí phát sinh</div>'+R('Phí kê khai < 100kg',fmt(c.phiKeKhai))+R('Phí hợp quy',fmt(c.phiHopQuy))+(c.phiKTCL?R('Phí kiểm tra chất lượng',fmt(c.phiKTCL)):'')+(c.phiKhac?R(esc(S.bg.h.tenPhiKhac||'Phí khác'),fmt(c.phiKhac)):'')+R('Thuế nhập khẩu',fmt(c.thueNK),c.thueTrenGX?'thuế suất × giá xuất':'thuế suất × trị giá khai APT')+
    '<div class="sec">Giá xuất</div>'+R('Giá đủ giá trị (A)',fmt(c.tongDu))+

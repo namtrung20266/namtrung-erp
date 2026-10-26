@@ -14,7 +14,7 @@ export async function boot() {
   const q = async (t, p) => (await db.query(t, p || [])).rows;
   const uploads = [];
   async function run(fn, args) {
-    const books = fn === 'api' && !/^admin\.import/.test(String(args[0])) ? ['CORE', 'HR'] : ['CORE', 'HR', 'CRM'];
+    const books = fn === 'api' && !/^admin\.(import|sheet)/.test(String(args[0])) ? ['CORE', 'HR'] : ['CORE', 'HR', 'CRM'];
     const snap = await loadSnapshot(q, books);
     const env = makeEnv(snap, { appUrl: 'https://nt.example/', storageBase: 'https://sb.example/storage/v1/object/public/files/' });
     env.audit = [];

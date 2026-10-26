@@ -26,7 +26,7 @@ async function upload(u: { path: string, bytes: number[], type: string }) {
 }
 
 async function run(fn: string, args: unknown[], appUrl: string) {
-  const books = fn === 'api' && !/^admin\.import/.test(String(args[0])) ? ['CORE', 'HR'] : ['CORE', 'HR', 'CRM'];
+  const books = fn === 'api' && !/^admin\.(import|sheet)/.test(String(args[0])) ? ['CORE', 'HR'] : ['CORE', 'HR', 'CRM'];
   const write = fn === 'job' || (fn === 'api' && !READ_ERP.has(String(args[0]))) || (fn === 'crm' && !READ_CRM.has(String(args[0])));
   const conn = await sql.reserve();
   const q = (t: string, p: unknown[]) => conn.unsafe(t, p as never[]);

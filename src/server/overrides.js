@@ -33,6 +33,10 @@ __route('admin.import.sheet', (ctx, p) => {
     const cur = {}; Repo.all('users').forEach(x => { if (x.password_hash) cur[U.up(x.username)] = x.password_hash; });
     rows.slice(1).forEach(r => { const k = U.up(r[iu]); if (cur[k]) { r[ip] = cur[k]; if (im >= 0) r[im] = false; } else if (String(r[ip] || '').indexOf('crm1:') !== 0) { r[ip] = ''; if (im >= 0) r[im] = true; } });
   }
+  if (book !== 'CRM') {   // bảng ERP: dòng thêm mới chưa có mã thì tự cấp
+    const ii = rows[0].indexOf('id');
+    if (ii >= 0) rows.slice(1).forEach(r => { if (r.some(v => v !== '' && v !== null) && !r[ii]) r[ii] = U.uuid(); });
+  }
   const ss = SpreadsheetApp.openById(book);
   const s = ss.getSheetByName(name) || ss.insertSheet(name);
   s.clear();
@@ -60,3 +64,19 @@ __route('admin.users.bulkTemp', (ctx, p) => {
   Audit.log(ctx.userId, 'admin.bulk_temp', 'users', null, { n: out.length });
   return out;
 }, { write: true });
+
+// Quản trị: đọc 1 sheet để sửa trực tiếp trên web (thay cho mở Google Sheet)
+__route('admin.sheet.get', (ctx, p) => {
+  Policy.need(ctx, 'core.user.manage');
+  const book = String(p.book || ''), name = String(p.sheet || '');
+  if (['CORE', 'HR', 'CRM'].indexOf(book) < 0) fail('VALIDATION', 'Sổ dữ liệu không hợp lệ');
+  if (book === 'CRM') { try { CRM_().sheet(name); } catch (e) { } }   // tạo sheet CRM theo cấu trúc nếu chưa có
+  if (book === 'CRM' && name === 'CAU_HINH') {   // hiện đủ mọi danh sách, kể cả danh sách đang dùng giá trị mặc định
+    const L = CRM_().lists(), keys = Object.keys(L), n = Math.max.apply(null, keys.map(k => L[k].length).concat([0]));
+    const out = [keys]; for (let i = 0; i < n; i++) out.push(keys.map(k => L[k][i] === undefined ? '' : L[k][i]));
+    return out;
+  }
+  const s = SpreadsheetApp.openById(book).getSheetByName(name);
+  if (!s) fail('NOT_FOUND', 'Chưa có sheet ' + name);
+  return s.getDataRange().getValues().map(r => r.map(v => v instanceof Date ? Utilities.formatDate(v, TZ, 'yyyy-MM-dd') : v));
+});
